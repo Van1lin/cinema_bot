@@ -23,7 +23,6 @@ def films_keyboard(films, prefix="movie_"):
 def genres_keyboard(genres):
     b = InlineKeyboardBuilder()
     for g in genres:
-        # Используем латинские символы в callback_data
         b.button(text=f"🎭 {g}", callback_data=f"genre_{g.replace(' ', '_')}")
     b.adjust(2)
     return b
@@ -63,4 +62,5 @@ def edit_keyboard(id):
     b.button(text="👤 Актори", callback_data=f"editfield_{id}_actors")
     b.button(text="🖼 Постер", callback_data=f"editfield_{id}_poster")
     b.adjust(2)
+
     return b
