@@ -13,7 +13,7 @@ from keyboards import (
     genres_keyboard,
     film_actions,
     rating_keyboard,
-    confirm_keyboard,
+    confirm_delete_keyboard,
     edit_keyboard,
 )
 from models import AddFilm, EditFilm
@@ -42,7 +42,7 @@ async def show_card(message, film: dict) -> None:
     )
     user_id = getattr(message.from_user, "id", None)
     admin = is_admin(user_id) if user_id else False
-    kb = film_actions(film['id'], admin=admin)  # ВСЕГДА показуємо кнопку редагування адмінам
+    kb = film_actions(film['id'], admin=admin)
     poster = film.get('poster') or ""
     if poster.startswith(("http://", "https://")):
         try:
@@ -216,12 +216,10 @@ async def toggle_favorite(callback: CallbackQuery):
 async def rate_film(callback: CallbackQuery):
     parts = callback.data.split("_")
     if len(parts) == 2:
-        # Показ клавіатури з рейтингом
         film_id = int(parts[1])
         kb = rating_keyboard(film_id)
         await callback.message.answer("⭐ Оберіть рейтинг (1-10):", reply_markup=kb.as_markup())
     elif len(parts) == 3:
-        # Обробка вибору рейтингу
         film_id = int(parts[1])
         rating = int(parts[2])
         user_id = callback.from_user.id
@@ -270,7 +268,6 @@ async def process_poster(message: Message, state: FSMContext):
     poster = (message.text or "").strip()
     data = await state.get_data()
     
-    # Додаємо фільм до бази
     new_film = db.add_film(
         title=data['title'],
         genre=data['genre'],
@@ -317,7 +314,6 @@ async def process_edit_field(callback: CallbackQuery, state: FSMContext):
         await callback.answer()
         return
     
-    # Зберігаємо дані для редагування
     await state.update_data(film_id=film_id, field=field)
     await state.set_state(EditFilm.new_value)
     
@@ -349,7 +345,6 @@ async def process_edit_value(message: Message, state: FSMContext):
     field = data['field']
     new_value = message.text.strip()
     
-    # Оновлюємо поле
     db.update_field(film_id, field, new_value)
     
     film = db.get_film_by_id(film_id)
@@ -357,8 +352,10 @@ async def process_edit_value(message: Message, state: FSMContext):
     await show_card(message, film)
     await state.clear()
 
+# --- УДАЛЕНИЕ ФИЛЬМОВ ---
+
 @router.callback_query(F.data.startswith("delete_"))
-async def process_delete(callback: CallbackQuery):
+async def process_delete_init(callback: CallbackQuery):
     if not is_admin(callback.from_user.id):
         await callback.answer("⛔ Тільки адмін може видаляти фільми")
         return
@@ -370,9 +367,34 @@ async def process_delete(callback: CallbackQuery):
         await callback.answer()
         return
     
-    # Видаляємо фільм
-    db.delete_film(film_id)
-    await callback.message.answer(f"🗑️ Фільм '{film['title']}' успішно видалено!")
+    kb = confirm_delete_keyboard(film_id)
+    await callback.message.answer(
+        f"🗑️ Ви впевнені, що хочете видалити фільм:\n"
+        f"<b>«{film['title']}»</b>?\n\n"
+        f"Ця дія незворотня!",
+        reply_markup=kb.as_markup()
+    )
+    await callback.answer()
+
+@router.callback_query(F.data.startswith("confirm_delete_"))
+async def process_delete_confirm(callback: CallbackQuery):
+    if not is_admin(callback.from_user.id):
+        await callback.answer("⛔ Тільки адмін може видаляти фільми")
+        return
+    
+    film_id = int(callback.data.split("_")[2])
+    film_title = db.delete_film(film_id)
+    
+    if film_title:
+        await callback.message.answer(f"✅ Фільм <b>«{film_title}»</b> успішно видалено!")
+    else:
+        await callback.message.answer("❌ Фільм не знайдено для видалення")
+    
+    await callback.answer()
+
+@router.callback_query(F.data == "cancel_delete")
+async def process_delete_cancel(callback: CallbackQuery):
+    await callback.message.answer("❌ Видалення скасовано")
     await callback.answer()
 
 # --- Пошук ---
@@ -403,7 +425,7 @@ async def handle_search_input(message: Message, state: FSMContext):
     
     await state.clear()
 
-# --- Загальний пошук (якщо не в режимі пошуку) ---
+# --- Загальний пошук ---
 @router.message(F.text & ~F.text.startswith('/') & 
                ~F.text.in_(["🎬 /films", "🔎 /search", "🎭 /genres", "🎲 /random", "⭐ /favorites"]))
 async def handle_general_search(message: Message):
