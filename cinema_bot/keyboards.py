@@ -34,6 +34,7 @@ def film_actions(id, admin: bool = False):
     b.button(text="❤️ В улюблені", callback_data=f"fav_{id}")
     if admin:
         b.button(text="✏️ Редагувати", callback_data=f"edit_{id}")
+        b.button(text="🗑️ Видалити", callback_data=f"delete_{id}")
     b.adjust(2)
     return b
 
@@ -45,11 +46,11 @@ def rating_keyboard(id):
     b.adjust(5)
     return b
 
-# підтвердження дії (наприклад видалення)
-def confirm_keyboard(id):
+# підтвердження видалення
+def confirm_delete_keyboard(film_id):
     b = InlineKeyboardBuilder()
-    b.button(text="✅ Так", callback_data=f"confirm_{id}")
-    b.button(text="❌ Ні", callback_data="cancel")
+    b.button(text="✅ Так, видалити", callback_data=f"confirm_delete_{film_id}")
+    b.button(text="❌ Ні, скасувати", callback_data="cancel_delete")
     b.adjust(2)
     return b
 
@@ -62,5 +63,4 @@ def edit_keyboard(id):
     b.button(text="👤 Актори", callback_data=f"editfield_{id}_actors")
     b.button(text="🖼 Постер", callback_data=f"editfield_{id}_poster")
     b.adjust(2)
-
     return b
