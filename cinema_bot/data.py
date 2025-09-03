@@ -86,9 +86,21 @@ class Database:
         self._write_data(data)
         return new_film
 
-    # видалити фільм
-    def delete_film(self, film_id: int) -> None:
+    # видалити фільм (повертає назву видаленого фільму)
+    def delete_film(self, film_id: int) -> str:
         data = self._read_data()
+        film_title = None
+        
+        # Знаходимо фільм для отримання назви
+        for m in data.get("movies", []):
+            if int(m.get("id")) == int(film_id):
+                film_title = m.get("title", "Невідомий фільм")
+                break
+                
+        if not film_title:
+            return None  # Фільм не знайдено
+
+        # Видаляємо фільм з списку
         data["movies"] = [m for m in data.get("movies", []) if int(m.get("id")) != int(film_id)]
 
         # чистимо з обраного
@@ -97,9 +109,11 @@ class Database:
 
         # чистимо рейтинги
         for uid in list(data.get("ratings", {})):
-            data["ratings"][uid].pop(str(film_id), None)
+            if str(film_id) in data["ratings"][uid]:
+                del data["ratings"][uid][str(film_id)]
 
         self._write_data(data)
+        return film_title
 
     # додати/прибрати з обраного
     def toggle_favorite(self, film_id: int, user_id: int) -> bool:
