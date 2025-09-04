@@ -24,14 +24,14 @@ Telegram-бот для перегляду фільмів, пошуку, рейт
 
 5. В корені (терміналі) проєкту створіть і активуйте віртуальне оточення:
 
-   1) python -m venv venv
+   - python -m venv venv
 
-   2) 
+ 
    # Linux / Mac
-   source venv/bin/activate
+   - source venv/bin/activate
 
    # Windows
-   venv\Scripts\activate
+   - venv\Scripts\activate
 
 ---
 
