@@ -5,7 +5,7 @@
 Telegram-бот для перегляду фільмів, пошуку, рейтингів та збереження улюблених. Дані зберігаються у `data.json`. Адмін може додавати, видаляти та редагувати фільми
 
 
-при роботі з ботом використовував "Visual Studio Code"
+при роботі з ботом використовував "Visual Studio Code" - https://code.visualstudio.com/
 ## Швидкий старт
 
 1. Встановіть Python 3.10+  https://www.python.org/downloads/release/python-3100/
