@@ -6,7 +6,7 @@ Telegram-бот для перегляду фільмів, пошуку, рейт
 
 ## Швидкий старт
 
-1. Встановіть Python 3.10+  
+1. Встановіть Python 3.10+  https://www.python.org/downloads/release/python-3100/
 
 ---
 
